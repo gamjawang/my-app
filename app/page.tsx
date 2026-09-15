@@ -5,7 +5,7 @@ import Link from 'next/link'
 export default function Home() {
   return (
     <main>
-      <h1>웹서버보안프로그래밍</h1>
+      <h1>웹서버보안프로그래밍- 장현</h1>
       <Counter />
       <br />
 
