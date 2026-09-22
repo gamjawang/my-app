@@ -10,6 +10,7 @@ export default function Home() {
       <br />
 
       <Link href="/about"> /about 페이지로 이동하기</Link>
+      <Link href="/product"> /product 페이지로 이동하기</Link>
     </main>
   )
 }
