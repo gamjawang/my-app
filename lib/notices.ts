@@ -1,10 +1,10 @@
-import dns from 'node:dns'
+import dns from 'dns'
 
-// Node.js가 구글 Public DNS를 사용하도록 설정
+// // Node.js가 구글 Public DNS를 사용하도록 설정
 dns.setServers(['8.8.8.8', '8.8.4.4'])
 import { Notice as NoticeModel } from '@/models/Notice'
 import { connectDB } from './mongodb'
-// import { title } from 'process'
+// // import { title } from 'process'
 
 export type Notice = {
   id: string
@@ -112,7 +112,7 @@ export async function createNotice(input: {
   author: string
   content: string
 }): Promise<Notice> {
-  await connectDB
+  await connectDB()
   const doc = await NoticeModel.create(input)
   return toNotice(doc)
 
