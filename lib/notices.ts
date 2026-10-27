@@ -1,7 +1,7 @@
 import dns from 'dns'
 
 // // Node.js가 구글 Public DNS를 사용하도록 설정
-dns.setServers(['8.8.8.8', '8.8.4.4'])
+dns.setServers(['8.8.8.8', '1.1.1.1'])
 import { Notice as NoticeModel } from '@/models/Notice'
 import { connectDB } from './mongodb'
 // // import { title } from 'process'
@@ -9,16 +9,18 @@ import { connectDB } from './mongodb'
 export type Notice = {
   id: string
   title: string
-  author: string
   content: string
+  authorId: string
+  authorName: string
   createdAt: string
 }
 
 type NoticeDocLike = {
   _id: unknown
   title: string
-  author: string
   content: string
+  authorId: unknown
+  authorName: string
   createdAt?: Date
 }
 
@@ -26,34 +28,35 @@ function toNotice(doc: NoticeDocLike): Notice {
   return {
     id: String(doc._id),
     title: doc.title,
-    author: doc.author,
     content: doc.content,
+    authorId: String(doc.authorId),
+    authorName: doc.authorName,
     createdAt: (doc.createdAt ?? new Date()).toISOString().slice(0, 10),
   }
 }
 
-async function seedIfEmpty() {
-  const count = await NoticeModel.countDocuments()
-  if (count > 0) return
+// async function seedIfEmpty() {
+//   const count = await NoticeModel.countDocuments()
+//   if (count > 0) return
 
-  await NoticeModel.insertMany([
-    {
-      title: '웹서버보안프로그래밍 개강 안내',
-      author: '감자',
-      content: '개강시작',
-    },
-    {
-      title: '웹서버보안프로그래밍 개강 안내',
-      author: '독감자',
-      content: '개강시작',
-    },
-    {
-      title: '웹서버보안프로그래밍 개강 안내',
-      author: '똥감자',
-      content: '개강시작',
-    },
-  ])
-}
+//   await NoticeModel.insertMany([
+//     {
+//       title: '웹서버보안프로그래밍 개강 안내',
+//       author: '감자',
+//       content: '개강시작',
+//     },
+//     {
+//       title: '웹서버보안프로그래밍 개강 안내',
+//       author: '독감자',
+//       content: '개강시작',
+//     },
+//     {
+//       title: '웹서버보안프로그래밍 개강 안내',
+//       author: '똥감자',
+//       content: '개강시작',
+//     },
+//   ])
+// }
 
 // const notices: Notice[] = [
 //   {
@@ -87,7 +90,7 @@ async function seedIfEmpty() {
 
 export async function getNotices(): Promise<Notice[]> {
   await connectDB()
-  await seedIfEmpty()
+  // await seedIfEmpty()
   const docs = await NoticeModel.find().sort({ createdAt: -1 }).lean()
   return docs.map((doc) => toNotice(doc as NoticeDocLike))
   // await delay(600)
@@ -109,8 +112,9 @@ export async function getNotice(id: string): Promise<Notice | undefined> {
 
 export async function createNotice(input: {
   title: string
-  author: string
   content: string
+  authorId: string
+  authorName: string
 }): Promise<Notice> {
   await connectDB()
   const doc = await NoticeModel.create(input)
@@ -126,4 +130,9 @@ export async function createNotice(input: {
   // }
   // notices.push(notice)
   // return notice
+}
+
+export async function deleteNotice(id: string): Promise<void> {
+  await connectDB
+  await NoticeModel.findByIdAndDelete(id)
 }

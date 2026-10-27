@@ -1,7 +1,7 @@
 import dns from 'node:dns'
 
 // // Node.js가 구글 Public DNS를 사용하도록 설정
-dns.setServers(['8.8.8.8', '8.8.4.4'])
+dns.setServers(['8.8.8.8', '1.1.1.1'])
 
 import mongoose from 'mongoose'
 
