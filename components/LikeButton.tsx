@@ -1,5 +1,4 @@
 'use client'
-import { likePriductAction } from '@/lib/actions'
 import { Button } from '@/components/ui/button'
 import { useState, useTransition } from 'react'
 

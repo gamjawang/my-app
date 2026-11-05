@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getNotice } from '@/lib/notices'
 import { auth } from '@/auth'
-import { fromBase62 } from 'shadcn/preset'
 import { SubmitButton } from '@/components/SubmitButton'
 import { deleteNoticeAction } from '@/lib/actions'
 
