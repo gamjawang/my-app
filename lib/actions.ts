@@ -7,11 +7,18 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { AuthError } from 'next-auth'
-import { getProduct } from '@/lib/products'
-import { addToCart, updateCartQty, removeFromCart } from '@/lib/cart'
+import { decrementStock, getProduct, getProductsByIds } from '@/lib/products'
+import {
+  addToCart,
+  updateCartQty,
+  removeFromCart,
+  getCartLines,
+  clearCart,
+} from '@/lib/cart'
 import { createNotice, deleteNotice, getNotice } from '@/lib/notices'
 import { createUser } from '@/lib/users'
 import { signIn, signOut, auth } from '@/auth'
+import { createOrder } from './orders'
 
 // 10주차부터 상품 목록/상세 페이지는 "좋아요" 대신 실제 장바구니 담기를
 // 지원합니다. 폼에서 넘어온 수량(qty)을 그대로 믿지 않고, 실제 재고를
@@ -62,6 +69,50 @@ export async function removeFromCartAction(formData: FormData) {
   }
   await removeFromCart(productId)
   revalidatePath('/', 'layout')
+}
+
+export async function checkoutAction() {
+  const session = await auth()
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  const lines = await getCartLines()
+  if (lines.length === 0) {
+    throw new Error('장바구니가 비어 있습니다.')
+  }
+
+  const products = await getProductsByIds(lines.map((line) => line.productId))
+  const items = lines
+    .map((line) => {
+      const product = products.find((p) => p.id === line.productId)
+      if (!product) return null
+      // 재고를 다시 한 번 이 시점 기준으로 강제합니다 — 장바구니에
+      // 담아둔 사이 재고가 줄어들었을 수도 있습니다.
+      const qty = Math.min(line.qty, product.stock)
+      if (qty <= 0) return null
+      return {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        qty,
+      }
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null)
+
+  if (items.length === 0) {
+    throw new Error('주문할 수 있는 상품이 없습니다(품절되었을 수 있습니다).')
+  }
+
+  const order = await createOrder(session.user.id, items)
+  await Promise.all(
+    items.map((item) => decrementStock(item.productId, item.qty)),
+  )
+  await clearCart()
+
+  revalidatePath('/', 'layout')
+  revalidatePath('/orders')
+  redirect(`/orders/${order.id}`)
 }
 
 // 9주차부터 이 액션은 로그인 여부를 직접 확인합니다. middleware.ts가
